@@ -13,6 +13,8 @@ class Timer extends Component {
       hours: 0,
     },
     markMode: false, //chronometre
+    chronometreIsRunning: false,
+    CountdownIsRunning: false,
   };
   getHours = (markMode) => {
     return markMode ? this.state.timeCountDown.hours : this.state.time.hours;
@@ -30,60 +32,74 @@ class Timer extends Component {
   getTime = (time) => {
     return time < 10 ? `0${time}` : time;
   };
-  getStartChronometre = (s, m, h) => {
-    this.timer = setInterval(() => {
-      if (s === 59) {
-        s = 0;
-        if (m === 59) {
-          m = 0;
-          h = h + 1;
+  startChronometre = (s, m, h) => {
+    if (!this.state.chronometreIsRunning) {
+      this.timer = setInterval(() => {
+        if (s === 59) {
+          s = 0;
+          if (m === 59) {
+            m = 0;
+            h = h + 1;
+          } else {
+            m = m + 1;
+          }
         } else {
-          m = m + 1;
+          s = s + 1;
         }
-      } else {
-        s = s + 1;
-      }
-      this.setState({
-        time: {
-          seconds: s,
-          minutes: m,
-          hours: h,
-        },
-      });
-    }, 1000);
+        this.setState({
+          time: {
+            seconds: s,
+            minutes: m,
+            hours: h,
+          },
+        });
+      }, 1000);
+    } else {
+      return;
+    }
+    this.setState({
+      chronometreIsRunning: true,
+    });
   };
-  getStartCountdown = (s, m, h) => {
-    this.timer = setInterval(() => {
-      if (s === 0) {
-        s = 59;
-        if (m === 0) {
-          m = 59;
-          h = h - 1;
+  startCountdown = (s, m, h, markMode) => {
+    if (!this.state.CountdownIsRunning) {
+      this.timer = setInterval(() => {
+        if (s === 0) {
+          s = 59;
+          if (m === 0) {
+            m = 59;
+            h = h - 1;
+          } else {
+            m = m - 1;
+          }
         } else {
-          m = m - 1;
+          s = s - 1;
         }
-      } else {
-        s = s - 1;
-      }
-      this.setState({
-        timeCountDown: {
-          seconds: s,
-          minutes: m,
-          hours: h,
-        },
-      });
-    }, 1000);
+        this.setState({
+          timeCountDown: {
+            seconds: s,
+            minutes: m,
+            hours: h,
+          },
+        });
+      }, 1000);
+    } else {
+      return;
+    }
+    this.setState({
+      CountdownIsRunning: true,
+    });
   };
-  getStart(s, m, h, markMode) {
+  startTimer(s, m, h, markMode) {
     return markMode
-      ? this.getStartCountdown(s, m, h)
-      : this.getStartChronometre(s, m, h);
+      ? this.startCountdown(s, m, h)
+      : this.startChronometre(s, m, h, markMode);
   }
-  getStop = () => {
+  stopTimer = () => {
     clearInterval(this.timer);
   };
-  getReset = (markMode) => {
-    this.getStop();
+  resetTimer = (markMode) => {
+    this.stopTimer();
     if (markMode) {
       this.setState({
         timeCountDown: {
@@ -91,6 +107,7 @@ class Timer extends Component {
           minutes: 5,
           hours: 0,
         },
+        CountdownIsRunning : false,
       });
     } else {
       this.setState({
@@ -99,15 +116,16 @@ class Timer extends Component {
           minutes: 0,
           hours: 0,
         },
+        chronometreIsRunning: false,
       });
     }
   };
-  getMode = () => {
+  changeMode = () => {
     this.setState({
       markMode: !this.state.markMode,
     });
   };
-  getModeTitle = (markMode) => {
+  changeTitle = (markMode) => {
     return markMode ? "Chronometer" : "Countdown";
   };
 
@@ -116,7 +134,7 @@ class Timer extends Component {
 
     return (
       <div className="timer">
-        <div className='time'>
+        <div className="time">
           <span>{this.getTime(this.getHours(markMode))}</span> :{" "}
           <span>{this.getTime(this.getMinutes(markMode))}</span> :{" "}
           <span>{this.getTime(this.getSeconds(markMode))}</span>
@@ -125,7 +143,7 @@ class Timer extends Component {
           <button
             className="btn-time"
             onClick={() =>
-              this.getStart(
+              this.startTimer(
                 this.getSeconds(markMode),
                 this.getMinutes(markMode),
                 this.getHours(markMode),
@@ -135,15 +153,18 @@ class Timer extends Component {
           >
             Start
           </button>
-          <button className="btn-time" onClick={() => this.getStop()}>
+          <button className="btn-time" onClick={() => this.stopTimer()}>
             Stop
           </button>
-          <button className="btn-time" onClick={() => this.getReset(markMode)}>
+          <button
+            className="btn-time"
+            onClick={() => this.resetTimer(markMode)}
+          >
             reset
           </button>
         </div>
-        <button className="btn-mode" onClick={() => this.getMode()}>
-          {this.getModeTitle(markMode)}
+        <button className="btn-mode" onClick={() => this.changeMode()}>
+          {this.changeTitle(markMode)}
         </button>
       </div>
     );
